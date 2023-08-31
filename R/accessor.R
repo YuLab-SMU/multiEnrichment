@@ -22,13 +22,17 @@ geneID.multiGseaResult <- function(x) as.character(x@core_enrichment)
 ##' @method geneInCategory multiEnrichResult
 ##' @export
 ##' @importFrom stats setNames
-geneInCategory.multiEnrichResult <- function(x)
+geneInCategory.multiEnrichResult <- function(x) {
     setNames(strsplit(geneID(x), "/", fixed=TRUE), rownames(x@result))
+}
+    
 
 ##' @method geneInCategory multiGseaResult
 ##' @export
-geneInCategory.multiGseaResult <- function(x)
+geneInCategory.multiGseaResult <- function(x) {
     setNames(strsplit(geneID(x), "/", fixed=TRUE), rownames(x@result))
+}
+    
 
 
 ##' @method [ multiEnrichResult

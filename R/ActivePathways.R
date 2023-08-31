@@ -1,6 +1,7 @@
 #' ActivePathways method
 #'
-#' @param multiGene a data.frame of multi-omics gene difference analysis results.
+#' @param multiGene a data.frame of multi-omics gene difference analysis results (pvalue).
+#' Each row is a gene, and each column represents an omics dataset. 
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel", 
 #' "bonferroni", "BH", "BY", "fdr", "none"

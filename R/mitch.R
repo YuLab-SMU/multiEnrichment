@@ -1,6 +1,7 @@
 #' mitch method
 #'
-#' @param multiGene a data.frame of multi-omics gene difference analysis results.
+#' @param multiGene a data.frame of multi-omics gene difference analysis results (-log10 pvalue * sign(logFC)).
+#' Each row is a gene, and each column represents an omics dataset. 
 #' @param TERM2GENE user input annotation of TERM TO GENE mapping,
 #' a data.frame of 2 column with term and gene
 #' @param minGSSize minimal size of genes annotated by Ontology term for testing.

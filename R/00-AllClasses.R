@@ -50,7 +50,7 @@ setClass("multiEnrichResult",
              method         = "character"
              ),
          prototype=prototype(readable = FALSE)
-         )
+)
 
 
 
@@ -102,5 +102,5 @@ setClass("multiGseaResult",
              termsim         = "matrix",
              method          = "character"
          )
-         )
+)
 

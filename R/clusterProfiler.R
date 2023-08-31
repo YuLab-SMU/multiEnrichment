@@ -1,6 +1,7 @@
 #' Multi-omics ORA enrichment analysis
 #'
-#' @param multiGene a data.frame of multi-omics gene difference analysis results.
+#' @param multiGene a data.frame of multi-omics gene difference analysis results (pvalue).
+#' Each row is a gene, and each column represents an omics dataset. 
 #' @param cutoff Pvalue threshold of differentially expressed genes.
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel",
@@ -50,7 +51,8 @@ multi_enricher <- function(multiGene,
 
 #' Multi-omics GSEA enrichment analysis
 #'
-#' @param multiGene a data.frame of multi-omics gene difference analysis results.
+#' @param multiGene a list of differential result. 
+#' Each is an data.frame of omic data containg pvalue and logFC. 
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel",
 #' "bonferroni", "BH", "BY", "fdr", "none"
