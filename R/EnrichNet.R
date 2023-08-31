@@ -91,6 +91,11 @@ RWR <- function(genelist, network, p = 0.5, threshold = 1e-9) {
 #' @param threshold threshold
 #' @param TERM2GENE TERM2GENE
 #' @param TERM2NAME TERM2NAME
+#' @param pvalueCutoff Cutoff value of pvalue.
+#' @param qvalueCutoff Cutoff of qvalue.
+#' @importFrom qvalue qvalue
+#' @param pAdjustMethod one of "holm", "hochberg", "hommel", 
+#' "bonferroni", "BH", "BY", "fdr", "none"
 #' @param n n
 #' @param nperm Number of permutations to do.
 #' @export
@@ -98,6 +103,11 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
                       TERM2NAME = NULL, threshold = 1e-9, n = 10, 
                       nperm = 100,  pvalueCutoff = 0.05, 
                       pAdjustMethod = "BH", qvalueCutoff = 0.2){
+    if (inherits(genelist, "character")) {
+        genename <- genelist
+        genelist <- rep(1, length(genename))
+        names(genelist) <- genename
+    }
     u <- RWR(genelist, network, p, threshold)
     TERM2GENE <- as.data.frame(TERM2GENE)
     TERM2GENE <- TERM2GENE[!is.na(TERM2GENE[,1]), ]
@@ -208,17 +218,20 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
     ##################
     if (!is.null(TERM2NAME)) {
         resmat$Description <- TERM2NAME[match(resmat$path_names, ERM2NAME[, 1]), 2]
+    } else {
+        resmat$Description <- resmat$path_names
     }
     resmat$adj <- p.adjust(resmat$pvalue, method = pAdjustMethod)
-    resmat$qval <- tryCatch(qvalue(resmat$pvalue, lambda=0.05, pi0.method="bootstrap"), 
-        error=function(e) NULL)
+    resmat$qval <- tryCatch(qvalue(resmat$pvalue, lambda=0.05, pi0.method="bootstrap")$qvalue, 
+        error=function(e) 0)
     resmat$GeneRatio <- apply(data.frame(a=resmat$overlap_sizes, b=resmat$upload_sizes), 1, function(x)
                        paste(x[1], "/", x[2], sep="", collapse=""))
     nTermGene <- resmat$pathway_sizes
-    N <- length(unique(TERM2GENE$gene))
+    N <- length(unique(TERM2GENE[, 2]))
     resmat$BgRatio <- apply(data.frame(a=nTermGene, b=N), 1, function(x)
                      paste(x[1], "/", x[2], sep="", collapse=""))   
-    resmat$geneID <- overlap_ids[resmat$path_names]
+    resmat$geneID <- vapply(overlap_ids[resmat$path_names], function(i) paste(i, collapse="/"), FUN.VALUE = "1")
+
     # resmat <- resmat[o,]
     result <- data.frame(ID          = resmat$path_names,
                          Description = resmat$Description,
@@ -226,7 +239,7 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
                          BgRatio     = resmat$BgRatio,  
                          pvalue      = resmat$pvalue,
                          p.adjust    = resmat$adj,
-                         qvalue      = resmat$qval$qvalue,
+                         qvalue      = resmat$qval,
                          geneID      = resmat$geneID,  
                          Count       = resmat$overlap_sizes)   
     
@@ -234,6 +247,8 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
     result <- result[result$pvalue < pvalueCutoff, ]
     result <- result[result$qvalue < qvalueCutoff, ]
     result <- result[order(result$pvalue), ]
+    background <- TERM2GENE[ ,2]
+    geneSets <- split(TERM2GENE[, 2], TERM2GENE[, 1])
     x <- new("enrichResult",
              result         = result,
              pvalueCutoff   = pvalueCutoff,
@@ -301,9 +316,6 @@ get_Xd2 <- function(distance_score, n, genelist, u) {
     distance_max <- distance_u %>% group_by(ranks) %>% summarize(across(distance, max))
     distance_length <- distance_u %>% group_by(ranks) %>% summarize(across(distance, length))
     
-    # distance_min <- distance_u %>% group_by(ranks) %>% summarize_each(funs(min))
-    # distance_max <- distance_u %>% group_by(ranks) %>% summarize_each(funs(max))
-    # distance_length <- distance_u %>% group_by(ranks) %>% summarize_each(funs(length))
     distance_min_max <- data.frame(min = distance_min[, 2], max = distance_max[, 2], length = distance_max[,2])
     
     distance_pathway <- rep(0, n)

@@ -9,6 +9,7 @@
 #' @param n n
 #' @param combineMethod The method of combining pvalues.
 #' @param nperm Number of permutations to do.
+#' @importFrom clusterProfiler compareCluster
 #' @export
 multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
                       TERM2NAME = NULL, threshold = 1e-9, n = 10, 
@@ -16,13 +17,13 @@ multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
                       pAdjustMethod = "BH", qvalueCutoff = 0.2,
                       combineMethod = "fisher",
                       stoufferWeights = NULL) {
-    gene_list <- vector("list", nrow(multiGene))
+    gene_list <- vector("list", ncol(multiGene))
     names(gene_list) <- colnames(multiGene)
     for (i in names(gene_list)) {
         gene_list[[i]] <- rownames(multiGene)[multiGene[, i] < 0.05]
     }
     compareClusterResult <- compareCluster(gene_list, fun = NetEnrich, network = network, 
-                      p = p, TERM2GENE = NULL,
+                      p = p, TERM2GENE = TERM2GENE,
                       TERM2NAME = TERM2NAME, threshold = threshold, n = n, 
                       nperm = nperm,  pvalueCutoff = pvalueCutoff, 
                       pAdjustMethod = pAdjustMethod, qvalueCutoff = qvalueCutoff)
@@ -30,7 +31,7 @@ multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
     names(enrichResultList) <- nrow(multiGene)
     enrichResultList <- lapply(gene_list, function(x) {
         NetEnrich(x, network = network, 
-            p = p, TERM2GENE = NULL,
+            p = p, TERM2GENE = TERM2GENE,
             TERM2NAME = TERM2NAME, threshold = threshold, n = n, 
             nperm = nperm,  pvalueCutoff = 1, 
             pAdjustMethod = pAdjustMethod, qvalueCutoff = 1)

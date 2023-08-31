@@ -103,5 +103,3 @@ setClass("multiGseaResult",
              method          = "character"
          )
 )
-
-setClass()
