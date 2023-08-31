@@ -104,3 +104,4 @@ setClass("multiGseaResult",
          )
 )
 
+setClass()

@@ -1,26 +1,9 @@
-#' wide2long undirected network
+#' wide2long
 #'
 #' @param network network
 #' @importFrom Matrix Matrix
 #' @export
-wide2long <- function(network) {
-    netGenes <- union(network[, 1], network[, 2])
-    # A <- matrix(0, length(netGenes), length(netGenes))
-    A <- Matrix(0, length(netGenes), length(netGenes))
-    rownames(A) <- colnames(A) <- netGenes
-    for (i in seq_len(nrow(network))) {
-        A[network[i, 1], network[i, 2]] <- network[i, 3]
-        A[network[i, 2], network[i, 1]] <- network[i, 3]
-    }
-    A
-}
-
-#' wide2long2 directed network
-#'
-#' @param network network
-#' @importFrom Matrix Matrix
-#' @export
-wide2long2 <- function(network) {
+wide2long <- function(network, direct = FALSE) {
     netGenes <- union(network[, 1], network[, 2])
     # A <- matrix(0, length(netGenes), length(netGenes))
     A <- Matrix(0, length(netGenes), length(netGenes))
@@ -28,15 +11,22 @@ wide2long2 <- function(network) {
     for (i in seq_len(nrow(network))) {
         A[network[i, 1], network[i, 2]] <- network[i, 3]
     }
+
+    if (!direct) {
+        for (i in seq_len(nrow(network))) {
+            A[network[i, 2], network[i, 1]] <- network[i, 3]
+        }
+    }
     A
 }
 
-#' wide2long undirected network
+
+#' wide2long undirected spMatrix network
 #'
 #' @param network network
 #' @importFrom Matrix spMatrix
 #' @export
-wide2long3 <- function(network) {
+wide2long_spMatrix <- function(network) {
     netGenes <- union(network[, 1], network[, 2])
     ii <- match(network[, 1], netGenes)
     jj <- match(network[, 2], netGenes)
@@ -65,7 +55,7 @@ RWR <- function(genelist, network, p = 0.5, threshold = 1e-9) {
         A <- network
         netGenes <- rownames(A)
     } else {
-        A <- wide2long3(network)
+        A <- wide2long_spMatrix(network)
         netGenes <- union(network[, 1], network[, 2])
     }
     
@@ -93,7 +83,7 @@ RWR <- function(genelist, network, p = 0.5, threshold = 1e-9) {
 }
 
 
-#' EnrichNet
+#' NetEnrich
 #'
 #' @param genelist genelist
 #' @param network network
@@ -104,8 +94,10 @@ RWR <- function(genelist, network, p = 0.5, threshold = 1e-9) {
 #' @param n n
 #' @param nperm Number of permutations to do.
 #' @export
-EnrichNet <- function(genelist, network, p = 0, TERM2GENE = NULL,
-                      TERM2NAME = NULL, threshold = 1e-9, n = 10, nperm = 100){
+NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
+                      TERM2NAME = NULL, threshold = 1e-9, n = 10, 
+                      nperm = 100,  pvalueCutoff = 0.05, 
+                      pAdjustMethod = "BH", qvalueCutoff = 0.2){
     u <- RWR(genelist, network, p, threshold)
     TERM2GENE <- as.data.frame(TERM2GENE)
     TERM2GENE <- TERM2GENE[!is.na(TERM2GENE[,1]), ]
@@ -190,7 +182,8 @@ EnrichNet <- function(genelist, network, p = 0, TERM2GENE = NULL,
     genes <- names(genelist)
 
     nodelabels <- names(u)
-    overlap_ids <- sapply(set_indices, function(x) nodelabels[intersect(x, genes)])
+    # overlap_ids <- sapply(set_indices, function(x) nodelabels[intersect(x, genes)])
+    overlap_ids <- sapply(set_indices, function(x) intersect(x, genes))
     overlaps <- sapply(overlap_ids, function(x) length(x))    
     path_lengths <- sapply(set_indices, length)	
     set_names <- names(PATHID2EXTID)
@@ -211,7 +204,50 @@ EnrichNet <- function(genelist, network, p = 0, TERM2GENE = NULL,
     # optional: output including overlapping gene ids
 	# return (list(resmat[o,], overlap_ids[o]))  
 	# compact output (no overlapping gene ids)
-	return (resmat[o,])
+	
+    ##################
+    if (!is.null(TERM2NAME)) {
+        resmat$Description <- TERM2NAME[match(resmat$path_names, ERM2NAME[, 1]), 2]
+    }
+    resmat$adj <- p.adjust(resmat$pvalue, method = pAdjustMethod)
+    resmat$qval <- tryCatch(qvalue(resmat$pvalue, lambda=0.05, pi0.method="bootstrap"), 
+        error=function(e) NULL)
+    resmat$GeneRatio <- apply(data.frame(a=resmat$overlap_sizes, b=resmat$upload_sizes), 1, function(x)
+                       paste(x[1], "/", x[2], sep="", collapse=""))
+    nTermGene <- resmat$pathway_sizes
+    N <- length(unique(TERM2GENE$gene))
+    resmat$BgRatio <- apply(data.frame(a=nTermGene, b=N), 1, function(x)
+                     paste(x[1], "/", x[2], sep="", collapse=""))   
+    resmat$geneID <- overlap_ids[resmat$path_names]
+    # resmat <- resmat[o,]
+    result <- data.frame(ID          = resmat$path_names,
+                         Description = resmat$Description,
+                         GeneRatio   = resmat$GeneRatio,  
+                         BgRatio     = resmat$BgRatio,  
+                         pvalue      = resmat$pvalue,
+                         p.adjust    = resmat$adj,
+                         qvalue      = resmat$qval$qvalue,
+                         geneID      = resmat$geneID,  
+                         Count       = resmat$overlap_sizes)   
+    
+    
+    result <- result[result$pvalue < pvalueCutoff, ]
+    result <- result[result$qvalue < qvalueCutoff, ]
+    result <- result[order(result$pvalue), ]
+    x <- new("enrichResult",
+             result         = result,
+             pvalueCutoff   = pvalueCutoff,
+             pAdjustMethod  = pAdjustMethod,
+             qvalueCutoff   = qvalueCutoff,
+             gene           = rownames(multiGene),
+             universe       = background,
+             geneSets       = geneSets,
+             organism       = "UNKNOWN",
+             keytype        = "UNKNOWN",
+             ontology       = "UNKNOWN",
+             readable       = FALSE
+            )
+    return(x)
 }
 
 
@@ -282,101 +318,6 @@ get_Xd2 <- function(distance_score, n, genelist, u) {
 
 
 
-#' EnrichNet2 NetPEA
-#'
-#' @param genelist genelist.
-#' @param network network.
-#' @param p restart probability.
-#' @param threshold threshold.
-#' @param TERM2GENE TERM2GENE.
-#' @param TERM2NAME TERM2NAME.
-#' @param nperm Number of permutations to do.
-#' @param keepAll If FALSE, just keep pathways that have overlap with input genes.
-#' @importFrom stats pnorm
-#' @importFrom stats sd
-#' @export
-EnrichNet2 <- function(genelist, network, p = 0.5, TERM2GENE = NULL,
-                      TERM2NAME = NULL, threshold = 1e-9, nperm = 100,
-                      keepAll = FALSE){
-    u <- RWR(genelist, network, p, threshold)
-    TERM2GENE <- as.data.frame(TERM2GENE)
-    TERM2GENE <- TERM2GENE[!is.na(TERM2GENE[,1]), ]
-    TERM2GENE <- TERM2GENE[!is.na(TERM2GENE[,2]), ]
-    TERM2GENE <- unique(TERM2GENE)
-    PATHID2EXTID <- split(as.character(TERM2GENE[,2]), as.character(TERM2GENE[,1]))
-
-    if (!keepAll) {
-        pathLen <- unlist(lapply(PATHID2EXTID, function(x) {length(intersect(x, names(genelist)))}))
-        PATHID2EXTID <- PATHID2EXTID[which(pathLen > 0)]
-    }
-
-    if ( missing(TERM2NAME) || is.null(TERM2NAME) || all(is.na(TERM2NAME))) {
-      # nothing
-    } else {
-        TERM2NAME <- as.data.frame(TERM2NAME)
-        TERM2NAME <- TERM2NAME[!is.na(TERM2NAME[,1]), ]
-        TERM2NAME <- TERM2NAME[!is.na(TERM2NAME[,2]), ]
-        TERM2NAME <- unique(TERM2NAME)
-    }
-
-    distance_scores <- rep(0, length(PATHID2EXTID))
-    for (i in seq_len(length(PATHID2EXTID))) {
-        uu <- u[PATHID2EXTID[[i]]]
-        uu <- uu[!is.na(uu)]
-        distance_scores[i] <- mean(1 - uu, na.rm = TRUE)    
-        # distance_scores[i] <- mean(1 / uu, na.rm = TRUE)  
-    }
-    names(distance_scores) <- names(PATHID2EXTID)
-
-    if (nperm == 1) {
-        # do nothing
-     } else {
-        ## random
-        distance_scores_random <- matrix(0, nrow = length(PATHID2EXTID), ncol = nperm)
-        rownames(distance_scores_random) <- names(distance_scores)
-        if (ncol(network) == nrow(network)) {
-            netGenes <- rownames(network)
-        } else {
-            netGenes <- union(network[, 1], network[, 2])
-        }
-        sampleGene <- genelist[names(genelist) %in% netGenes] 
-        for (i in seq_len(nperm)) {
-            names(sampleGene) <- sample(netGenes, length(sampleGene))
-            u <- quiet(RWR(sampleGene, network, p, threshold))
-            for (j in seq_len(length(PATHID2EXTID))) {
-                uu <- u[PATHID2EXTID[[j]]]
-                uu <- uu[!is.na(uu)]
-                distance_scores_random[j, i] <- mean(1 - uu, na.rm = TRUE) 
-                # distance_scores_random[j, i] <- mean(1 / uu, na.rm = TRUE)      
-            }
-        }
-        means <- rowMeans(distance_scores_random)
-        sds <- apply(distance_scores_random, 1, FUN = sd, na.rm = TRUE)
-        zscore <- (distance_scores - means) / sds
-        pvalue <- pnorm(zscore, lower.tail=FALSE)
-    
-    
-        result <- data.frame(id = names(distance_scores), 
-                             distanceScore = distance_scores,
-                             zscore = zscore,
-                             pvalue = pvalue)
-        if (sum(is.na(result$pvalue)) > 0) {
-            result <- result[!is.na(result$pvalue), ]
-        }
-    
-        if (sum(is.na(result$distanceScore)) > 0) {
-            result <- result[!is.na(result$distanceScore), ]
-        }
-    
-        result <- result[order(result[, "pvalue"], decreasing = FALSE), ]
-        result <- result[!is.na(result[, 2]), ]
-        result$name <- TERM2NAME[match(result$id, TERM2NAME[, 1]), 2]
-    }
-
-    
-    result
-}
-
 
 
 
@@ -421,8 +362,9 @@ xd_distance <- function(distrib1, distrib2, diam) {
 }
 
 
-#' EnrichNet_rank
+#' NetEnrich_rank 
 #'
+#' Imitate ActivePathways
 #' @param genelist genelist
 #' @param network network
 #' @param p restart probability
@@ -432,19 +374,17 @@ xd_distance <- function(distrib1, distrib2, diam) {
 #' @param n n
 #' @param nperm Number of permutations to do.
 #' @export
-EnrichNet_rank <- function(genelist, network, p = 0, TERM2GENE = NULL,
+NetEnrich_rank <- function(genelist, network, p = 0, TERM2GENE = NULL,
                       TERM2NAME = NULL, threshold = 1e-9, n = 10, nperm = 100){ 
     ranks <- seq(1, length(genelist), 5)                  
     results <- vector("list", length(ranks))
     for (k in 1:length(ranks)) {
-        results[[k]] <- EnrichNet(genelist = genelist[1:ranks[k]], 
+        results[[k]] <- NetEnrich(genelist = genelist[1:ranks[k]], 
             network = network, p = p, TERM2GENE = TERM2GENE,
             TERM2NAME = TERM2NAME, threshold = threshold, n = n, nperm = nperm)
         
     }
 
-    	    # names(resmat) <- c("path_names", "xd_scores", "upload_sizes", 
-            # "pathway_sizes", "overlap_sizes", "pvalue")
     pathways <- unique(TERM2GENE[, 1])
     result_mat <- matrix(1, length(ranks), length(pathways))
     colnames(result_mat) <- pathways
@@ -460,3 +400,5 @@ EnrichNet_rank <- function(genelist, network, p = 0, TERM2GENE = NULL,
     }
     return(resultdf)
 }
+
+
