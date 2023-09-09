@@ -14,6 +14,7 @@ multiNetEnrich(
   n = 10,
   nperm = 100,
   pvalueCutoff = 0.05,
+  cutoff = 0.05,
   pAdjustMethod = "BH",
   qvalueCutoff = 0.2,
   combineMethod = "fisher",
@@ -21,23 +22,38 @@ multiNetEnrich(
 )
 }
 \arguments{
+\item{multiGene}{a data.frame of multi-omics gene difference analysis results (pvalue).
+Each row is a gene, and each column represents an omics dataset.}
+
 \item{network}{network}
 
 \item{p}{restart probability}
 
-\item{TERM2GENE}{TERM2GENE}
+\item{TERM2GENE}{user input annotation of TERM TO GENE mapping, 
+a data.frame of 2 column with term and gene}
 
-\item{TERM2NAME}{TERM2NAME}
+\item{TERM2NAME}{user input of TERM TO NAME mapping, 
+a data.frame of 2 column with term and name}
 
 \item{threshold}{threshold}
 
-\item{n}{n}
+\item{n}{number of bins}
 
 \item{nperm}{Number of permutations to do.}
 
-\item{combineMethod}{The method of combining pvalues.}
+\item{pvalueCutoff}{Cutoff value of pvalue.}
 
-\item{genelist}{genelist}
+\item{cutoff}{Pvalue threshold of differentially expressed genes.}
+
+\item{pAdjustMethod}{one of "holm", "hochberg", "hommel", 
+"bonferroni", "BH", "BY", "fdr", "none"}
+
+\item{qvalueCutoff}{Cutoff of qvalue.}
+
+\item{combineMethod}{The method of combining pvalues, one of 
+"fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).}
+
+\item{stoufferWeights}{weights of stouffer combine method.}
 }
 \description{
 multiNetEnrich

@@ -1,6 +1,7 @@
 #' wide2long
 #'
 #' @param network network
+#' @param direct if TRUE, build a directed network
 #' @importFrom Matrix Matrix
 #' @export
 wide2long <- function(network, direct = FALSE) {
@@ -85,7 +86,7 @@ RWR <- function(genelist, network, p = 0.5, threshold = 1e-9) {
 
 #' NetEnrich
 #'
-#' @param genelist genelist
+#' @param genelist a vector of gene weights, which names are genes.
 #' @param network network
 #' @param p restart probability
 #' @param threshold threshold
@@ -217,7 +218,7 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
 	
     ##################
     if (!is.null(TERM2NAME)) {
-        resmat$Description <- TERM2NAME[match(resmat$path_names, ERM2NAME[, 1]), 2]
+        resmat$Description <- TERM2NAME[match(resmat$path_names, TERM2NAME[, 1]), 2]
     } else {
         resmat$Description <- resmat$path_names
     }
@@ -254,7 +255,7 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
              pvalueCutoff   = pvalueCutoff,
              pAdjustMethod  = pAdjustMethod,
              qvalueCutoff   = qvalueCutoff,
-             gene           = rownames(multiGene),
+             gene           = names(genelist),
              universe       = background,
              geneSets       = geneSets,
              organism       = "UNKNOWN",

@@ -1,26 +1,37 @@
 #' multiNetEnrich
 #'
-#' @param genelist genelist
+#' @param multiGene a data.frame of multi-omics gene difference analysis results (pvalue).
+#' Each row is a gene, and each column represents an omics dataset. 
 #' @param network network
 #' @param p restart probability
 #' @param threshold threshold
-#' @param TERM2GENE TERM2GENE
-#' @param TERM2NAME TERM2NAME
-#' @param n n
+#' @param n number of bins
 #' @param combineMethod The method of combining pvalues.
 #' @param nperm Number of permutations to do.
+#' @param cutoff Pvalue threshold of differentially expressed genes.
+#' @param pvalueCutoff Cutoff value of pvalue.
+#' @param pAdjustMethod one of "holm", "hochberg", "hommel", 
+#' "bonferroni", "BH", "BY", "fdr", "none"
+#' @param qvalueCutoff Cutoff of qvalue.
+#' @param TERM2GENE user input annotation of TERM TO GENE mapping, 
+#' a data.frame of 2 column with term and gene
+#' @param TERM2NAME user input of TERM TO NAME mapping, 
+#' a data.frame of 2 column with term and name
+#' @param combineMethod The method of combining pvalues, one of 
+#' "fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).
+#' @param stoufferWeights weights of stouffer combine method.
 #' @importFrom clusterProfiler compareCluster
 #' @export
 multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
                       TERM2NAME = NULL, threshold = 1e-9, n = 10, 
-                      nperm = 100,  pvalueCutoff = 0.05, 
+                      nperm = 100,  pvalueCutoff = 0.05, cutoff = 0.05,
                       pAdjustMethod = "BH", qvalueCutoff = 0.2,
                       combineMethod = "fisher",
                       stoufferWeights = NULL) {
     gene_list <- vector("list", ncol(multiGene))
     names(gene_list) <- colnames(multiGene)
     for (i in names(gene_list)) {
-        gene_list[[i]] <- rownames(multiGene)[multiGene[, i] < 0.05]
+        gene_list[[i]] <- rownames(multiGene)[multiGene[, i] < cutoff]
     }
     compareClusterResult <- compareCluster(gene_list, fun = NetEnrich, network = network, 
                       p = p, TERM2GENE = TERM2GENE,

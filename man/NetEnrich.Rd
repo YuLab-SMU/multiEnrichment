@@ -19,7 +19,7 @@ NetEnrich(
 )
 }
 \arguments{
-\item{genelist}{genelist}
+\item{genelist}{a vector of gene weights, which names are genes.}
 
 \item{network}{network}
 

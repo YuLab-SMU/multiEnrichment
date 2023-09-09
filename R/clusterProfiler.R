@@ -255,6 +255,7 @@ combine_GSEA <- function(multiEm, method, stoufferWeights, pAdjustMethod,
 #'
 #' @param multiEm multi-omics enrichment analysis results.
 #' @param slotName slot name.
+#' @importFrom methods slot
 #' @noRd
 slot2list <- function(multiEm, slotName) {
     slotList <- vector("list", length(multiEm))

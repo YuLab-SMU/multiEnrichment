@@ -8,6 +8,8 @@ wide2long(network, direct = FALSE)
 }
 \arguments{
 \item{network}{network}
+
+\item{direct}{if TRUE, build a directed network}
 }
 \description{
 wide2long
