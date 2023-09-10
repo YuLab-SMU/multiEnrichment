@@ -22,7 +22,8 @@ multiEnrichment(
 )
 }
 \arguments{
-\item{multiGene}{a data.frame of multi-omics gene difference analysis results.}
+\item{multiGene}{a data.frame of multi-omics gene difference analysis results (pvalue).
+Each row is a gene, and each column represents an omics dataset.}
 
 \item{method}{enrichment analysis method, one of "enricher"(the default)
 "GSEA", "mitch", "ActivePathways".}

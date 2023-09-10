@@ -15,6 +15,7 @@
 #' @param TERM2NAME user input of TERM TO NAME mapping,
 #' a data.frame of 2 column with term and name
 #' @param combineMethod The method of combining pvalues.
+#' @param output output class.
 #' @param ... Other parameters.
 #' @noRd
 multi_enricher <- function(multiGene,
@@ -29,6 +30,7 @@ multi_enricher <- function(multiGene,
                            TERM2NAME = NA,
                            combineMethod = "fisher",
                            stoufferWeights = NULL,
+                           output = "enrichResult",
                            ...) {
 
     if (class(multiGene) == "data.frame") {
@@ -46,7 +48,12 @@ multi_enricher <- function(multiGene,
     em@pAdjustMethod <- pAdjustMethod
     em@pvalueCutoff <- pvalueCutoff
     em@qvalueCutoff <- qvalueCutoff
-    get_enriched2(em)
+    em <- get_enriched2(em)
+    if (output == "enrichResult") {
+        return(multiEnrichResult2enrichResult(em))
+    } else {
+        return(em)
+    }
 }
 
 #' Multi-omics GSEA enrichment analysis

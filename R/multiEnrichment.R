@@ -6,7 +6,8 @@
 #' @importFrom utils tail
 #' @importFrom qvalue qvalue
 #' @importFrom methods new
-#' @param multiGene a data.frame of multi-omics gene difference analysis results.
+#' @param multiGene a data.frame of multi-omics gene difference analysis results (pvalue).
+#' Each row is a gene, and each column represents an omics dataset. 
 #' @param method enrichment analysis method, one of "enricher"(the default)
 #' "GSEA", "mitch", "ActivePathways".
 #' @param cutoff Pvalue threshold of differentially expressed genes.

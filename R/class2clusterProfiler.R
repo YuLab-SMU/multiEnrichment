@@ -57,11 +57,42 @@ multiEnrichResult2enrichResult <- function(em_enricher, method = "union") {
 
 multiGseaResult2gseaResult <- function(em_gsea, method = "union") {
     
+    # 强行转换的话损失太大，无法转换。
+    # res <- data.frame(
+    #     ID = as.character(tmp_res$pathway),
+    #     Description = unname(Description),
+    #     setSize = tmp_res$size,
+    #     enrichmentScore = tmp_res$ES,
+    #     NES = tmp_res$NES,
+    #     pvalue = tmp_res$pval,
+    #     p.adjust = p.adj,
+    #     qvalue = qvalues,
+    #     stringsAsFactors = FALSE
+    # )
+
+    # res <- res[!is.na(res$pvalue),]
+    # res <- res[ res$pvalue <= pvalueCutoff, ]
+    # res <- res[ res$p.adjust <= pvalueCutoff, ]
+    # idx <- order(res$p.adjust, -abs(res$NES), decreasing = FALSE)
+    # res <- res[idx, ]
+    # row.names(res) <- res$ID
+    # observed_info <- lapply(geneSets[res$ID], function(gs)
+    #     gseaScores(geneSet=gs,
+    #                geneList=geneList,
+    #                exponent=exponent)
+    # )
+    # ledge <- leading_edge(observed_info)
+    # res$rank <- ledge$rank
+    # res$leading_edge <- ledge$leading_edge
+    # res$core_enrichment <- sapply(ledge$core_enrichment, paste0, collapse='/')
+    # new("gseaResult",
+    #     result     = res,
+    #     geneSets   = geneSets,
+    #     geneList   = geneList,
+    #     params     = params,
+    #     readable   = FALSE
+    # )
 }
-
-
-
-
 
 
 
