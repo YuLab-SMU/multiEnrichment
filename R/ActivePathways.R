@@ -53,7 +53,7 @@ ActivePathways_method <- function(multiGene,
     scores <- as.matrix(multiGene)
     # scores can not contain missing values
     scores[is.na(scores)] <- 1
-    background <- TERM2GENE$gene
+    background <- TERM2GENE$gene |> as.character() |> unique()
     if(!is.null(universe)) {
         if (is.character(universe)) {
             universe <- intersect(background, universe)

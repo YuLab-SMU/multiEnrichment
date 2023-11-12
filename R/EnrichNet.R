@@ -248,7 +248,7 @@ NetEnrich <- function(genelist, network, p = 0, TERM2GENE = NULL,
     result <- result[result$pvalue < pvalueCutoff, ]
     result <- result[result$qvalue < qvalueCutoff, ]
     result <- result[order(result$pvalue), ]
-    background <- TERM2GENE[ ,2]
+    background <- TERM2GENE[ ,2] |> as.character() |> unique()
     geneSets <- split(TERM2GENE[, 2], TERM2GENE[, 1])
     x <- new("enrichResult",
              result         = result,
