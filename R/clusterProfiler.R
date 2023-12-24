@@ -15,7 +15,7 @@
 #' @param TERM2NAME user input of TERM TO NAME mapping,
 #' a data.frame of 2 column with term and name
 #' @param combineMethod The method of combining pvalues.
-#' @param output output class.
+#' @param output output class, one of "enrichResult", "multiEnrichResult", and "compareClusterResult".
 #' @param ... Other parameters.
 #' @noRd
 multi_enricher <- function(multiGene,
@@ -33,15 +33,30 @@ multi_enricher <- function(multiGene,
                            output = "enrichResult",
                            ...) {
 
-    if (class(multiGene) == "data.frame") {
-        multiGene <- split(multiGene, multiGene$omic)
-    }                           
+    # if (class(multiGene) == "data.frame") {
+    #     multiGene <- split(multiGene, multiGene$omic)
+    # }    
+    output <- match.arg(output, c("enrichResult", "multiEnrichResult", "compareClusterResult"))
+    multiGeneList <- vector("list", length = ncol(multiGene))         
+    names(multiGeneList) <- colnames(multiGene)  
+    for (i in colnames(multiGene)) {
+        multiGeneList[[i]] <- data.frame(gene = rownames(multiGene), pvalue = multiGene[, i])
+    }   
+    if (output == "compareClusterResult") {
+        multiGeneList2 <- lapply(multiGeneList, function(x) x[x$pvalue < cutoff, "gene"])
+        em <- compareCluster(multiGeneList2, fun = clusterProfiler::enricher,
+                      TERM2GENE = TERM2GENE,
+                      TERM2NAME = TERM2NAME, 
+                      pvalueCutoff = pvalueCutoff, 
+                      pAdjustMethod = pAdjustMethod, qvalueCutoff = qvalueCutoff)
+        return(em)
+    }
     run_enricher <- function(df, ...) {
         genes <- df[df$pvalue < cutoff, "gene"]
         clusterProfiler::enricher(genes, TERM2GENE = TERM2GENE,
             pvalueCutoff = 1, qvalueCutoff = 1, ...)
     }
-    multiEm <- lapply(multiGene, run_enricher, ...)
+    multiEm <- lapply(multiGeneList, run_enricher, ...)
     em <- combine_enricher(multiEm = multiEm, method = combineMethod, 
         stoufferWeights = stoufferWeights, pAdjustMethod = pAdjustMethod,
         pvalueCutoff = pvalueCutoff, qvalueCutoff = qvalueCutoff)
@@ -71,6 +86,7 @@ multi_enricher <- function(multiGene,
 #' @param TERM2NAME user input of TERM TO NAME mapping,
 #' a data.frame of 2 column with term and name
 #' @param combineMethod The method of combining pvalues.
+#' @param output output class, one of "multiGseaResult", "gseaResult" and "compareClusterResult".
 #' @param ... Other parameters.
 #' @noRd
 multi_GSEA <- function(multiGene,
@@ -84,23 +100,74 @@ multi_GSEA <- function(multiGene,
                        TERM2NAME = NA,
                        combineMethod = "fisher",
                        stoufferWeights = NULL,
+                       output = "multiGseaResult",
                        ...) {
-    if (class(multiGene) == "data.frame") {
-        multiGene <- split(multiGene, multiGene$omic)
-    }   
-    run_GSEA <- function(df, ...) {
-      genelist <- -sign(df$logFC) * log10(df$pvalue)
-      names(genelist) <- df$gene
-      genelist <- sort(genelist, decreasing = TRUE)
-      clusterProfiler::GSEA(genelist, TERM2GENE = TERM2GENE,
-           pvalueCutoff = 1)
+    # if (class(multiGene) == "data.frame") {
+    #     multiGene <- split(multiGene, multiGene$omic)
+    # }  
+    output <- match.arg(output, c("multiGseaResult", "gseaResult", "compareClusterResult"))
+    multiGeneList <- vector("list", length = ncol(multiGene))         
+    names(multiGeneList) <- colnames(multiGene)  
+    for (i in colnames(multiGene)) {
+        multiGeneList[[i]] <- data.frame(gene = rownames(multiGene), pvalue = multiGene[, i])
+    }    
+    # run_GSEA <- function(df, ...) {
+    #   genelist <- -sign(df$logFC) * log10(df$pvalue)
+    #   names(genelist) <- df$gene
+    #   genelist <- sort(genelist, decreasing = TRUE)
+    #   clusterProfiler::GSEA(genelist, TERM2GENE = TERM2GENE,
+    #        pvalueCutoff = 1)
+    # }
+    if (output == "compareClusterResult") {
+        multiGeneList2 <- lapply(multiGeneList, function(x) {
+            genelist <- x$pvalue
+            names(genelist) <- x$gene
+            sort(genelist, decreasing = TRUE)
+        })
+        em <- compareCluster(multiGeneList2, fun = clusterProfiler::GSEA,
+                      TERM2GENE = TERM2GENE,
+                      TERM2NAME = TERM2NAME, 
+                      pvalueCutoff = pvalueCutoff, 
+                      pAdjustMethod = pAdjustMethod)
+        return(em)
     }
-    multiEm <- lapply(multiGene, run_GSEA, ...)
+
+
+    run_GSEA <- function(df, ...) {
+        genelist <- df$pvalue
+        names(genelist) <- df$gene
+        genelist <- sort(genelist, decreasing = TRUE)
+        clusterProfiler::GSEA(genelist, TERM2GENE = TERM2GENE,
+             pvalueCutoff = 1)
+    }
+    multiEm <- lapply(multiGeneList, run_GSEA, ...)
     em <- combine_GSEA(multiEm, method = combineMethod, 
         stoufferWeights = stoufferWeights, pAdjustMethod = pAdjustMethod,
         pvalueCutoff = pvalueCutoff, qvalueCutoff = qvalueCutoff)
     em@params$pAdjustMethod <- pAdjustMethod
-    get_enriched2(em)
+    em <- get_enriched2(em)
+    if (output == "multiGseaResult") {
+        return(em)
+    }
+    if (output == "gseaResult") {
+        result <- em@result
+        geneList <- em@geneList[[1]]
+        result$enrichmentScore <- em@enrichmentScore[[1]]
+        result$NES <- em@NES[[1]]
+        result$rank <- em@rank[[1]]
+        result$leading_edge <- em@leading_edge[[1]]
+        result$core_enrichment <- em@core_enrichment[[1]]
+        result$setSize <- em@setSize[[1]]
+        em <- new("gseaResult",
+            result     = result,
+            geneSets   = em@geneSets,
+            geneList   = geneList,
+            params     = em@params,
+            readable   = FALSE
+        )
+        return(em)
+    }
+
 }
 
 

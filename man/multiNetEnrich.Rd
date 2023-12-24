@@ -18,7 +18,8 @@ multiNetEnrich(
   pAdjustMethod = "BH",
   qvalueCutoff = 0.2,
   combineMethod = "fisher",
-  stoufferWeights = NULL
+  stoufferWeights = NULL,
+  output = "enrichResult"
 )
 }
 \arguments{
@@ -54,6 +55,8 @@ a data.frame of 2 column with term and name}
 "fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).}
 
 \item{stoufferWeights}{weights of stouffer combine method.}
+
+\item{output}{output class, one of "enrichResult", "compareClusterResult" and "list".}
 }
 \description{
 multiNetEnrich

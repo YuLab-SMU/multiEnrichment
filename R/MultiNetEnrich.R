@@ -20,6 +20,7 @@
 #' @param combineMethod The method of combining pvalues, one of 
 #' "fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).
 #' @param stoufferWeights weights of stouffer combine method.
+#' @param output output class, one of "enrichResult", "compareClusterResult" and "list".
 #' @importFrom clusterProfiler compareCluster
 #' @export
 multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
@@ -27,7 +28,8 @@ multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
                       nperm = 100,  pvalueCutoff = 0.05, cutoff = 0.05,
                       pAdjustMethod = "BH", qvalueCutoff = 0.2,
                       combineMethod = "fisher",
-                      stoufferWeights = NULL) {
+                      stoufferWeights = NULL, output = "enrichResult") {
+    output <- match.arg(output, c("enrichResult", "compareClusterResult", "list"))
     gene_list <- vector("list", ncol(multiGene))
     names(gene_list) <- colnames(multiGene)
     for (i in names(gene_list)) {
@@ -38,6 +40,9 @@ multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
                       TERM2NAME = TERM2NAME, threshold = threshold, n = n, 
                       nperm = nperm,  pvalueCutoff = pvalueCutoff, 
                       pAdjustMethod = pAdjustMethod, qvalueCutoff = qvalueCutoff)
+    if (output == "compareClusterResult") {
+        return(compareClusterResult)
+    }
     enrichResultList <- vector("list", nrow(multiGene))
     names(enrichResultList) <- nrow(multiGene)
     enrichResultList <- lapply(gene_list, function(x) {
@@ -74,5 +79,12 @@ multiNetEnrich <- function(multiGene, network, p = 0, TERM2GENE = NULL,
     em@pvalueCutoff <- pvalueCutoff
     em@qvalueCutoff <- qvalueCutoff
     enrichResult <- get_enriched2(em)
-    return(list(compareClusterResult = compareClusterResult, enrichResult = enrichResult))
+    if (output == "enrichResult") {
+        return(enrichResult)
+    }
+
+    if (output == "list") {
+        return(list(compareClusterResult = compareClusterResult, enrichResult = enrichResult))
+    }
+    
 }

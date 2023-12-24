@@ -17,14 +17,16 @@ mitch_method <- function(multiGene, TERM2GENE, TERM2NAME = NULL, minGSSize,
     results <- mitch::mitch_calc(x = multiGene, genesets = PATHID2EXTID,
         minsetsize = minGSSize, ...)
     enrichment_result <- results$enrichment_result
-    rownames(TERM2NAME) <- TERM2NAME[, 1]
-    if (!is.null(TERM2NAME)) {
+    if (is.null(TERM2NAME)) {
+        enrichment_result$Description <- enrichment_result$set     
+    } else {
+        rownames(TERM2NAME) <- TERM2NAME[, 1]
         enrichment_result$Description <- TERM2NAME[enrichment_result$set, 2]
     }
 
     # 先把multiGene保持不变
     geneSets <- split(TERM2GENE[, 2], TERM2GENE[, 1])
-    gmts <- split(TERM2GENE, TERM2GENE$term)
+    gmts <- split(TERM2GENE, TERM2GENE[, 1])
     sets <- names(geneSets)
     Count <- lapply(geneSets, function(x) intersect(x, rownames(multiGene)) |> length()) |>
         unlist()
@@ -47,13 +49,17 @@ mitch_method <- function(multiGene, TERM2GENE, TERM2NAME = NULL, minGSSize,
     p.adj <- enrichment_result$p.adjustMANOVA
     qobj <- tryCatch(qvalue(p=enrichment_result$p.adjustMANOVA, lambda=0.05, pi0.method="bootstrap"),
         error=function(e) NULL)
+    qvalue <- p.adj
+    if (!is.null(qobj)) {
+        qvalue <- qobj$qvalue
+    }
     overlap <- lapply(results$input_genesets, function(x) {
         intersect(x, rownames(multiGene))
     })
     geneID <- vapply(overlap, function(i) paste(i, collapse="/"), FUN.VALUE = "1")
     names(geneID) <- names(results$input_genesets)
     enrichment_result$geneID <- geneID[enrichment_result$set]
-
+    
 
 
 
@@ -63,7 +69,7 @@ mitch_method <- function(multiGene, TERM2GENE, TERM2NAME = NULL, minGSSize,
                          BgRatio     = enrichment_result$BgRatio,
                          pvalue      = enrichment_result$p.adjustMANOVA,
                          p.adjust    = p.adj,
-                         qvalue      = qobj$qvalue,
+                         qvalue      = qvalue,
                          geneID      = enrichment_result$geneID,
                          Count       = enrichment_result$Count)
     result <- result[result$pvalue < pvalueCutoff, ]

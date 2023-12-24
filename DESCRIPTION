@@ -1,7 +1,7 @@
 Package: multiEnrichment
 Type: Package
 Title: Multi-omics enrichment analysis
-Version: 0.1.0.991
+Version: 0.1.0.993
 Authors@R: person(given = "Erqiang", family = "Hu", email = "13766876214@163.com", role  = c("aut", "cre"))
 Description: An R package that integrates several multi-group enrichment analysis software, 
     and the enrichment results can be seamlessly docked with enrichplot for easy mapping.
@@ -10,7 +10,9 @@ License: Artistic-2.0
 Encoding: UTF-8
 LazyData: true
 Suggests: 
-    renv
+    knitr,
+    renv,
+    rmarkdown
 Imports: 
     clusterProfiler,
     metap,
@@ -23,3 +25,4 @@ Imports:
     magrittr,
     Matrix
 RoxygenNote: 7.2.3
+VignetteBuilder: knitr

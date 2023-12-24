@@ -1,0 +1,88 @@
+---
+title: "GeoTcgaData"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{GeoTcgaData}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+--------
+
+## Authors
+Erqiang Hu
+
+Department of Bioinformatics, School of Basic Medical Sciences, 
+Southern Medical University.
+
+
+```{r setup}
+library(multiEnrichment)
+data(multiGene)
+data(TERM2GENE)
+data(network)
+```
+
+Multiple omics forms for ORA algorithm.
+```{r message=FALSE, warning=FALSE}
+# output: enrichResult
+enricher_result <- multiEnrichment(multiGene = multiGene, method = "enricher", 
+                                   TERM2GENE = TERM2GENE) 
+# output: compareClusterResult
+enricher2_result <- multiEnrichment(multiGene = multiGene, method = "enricher", 
+                                    TERM2GENE = TERM2GENE, 
+                                    output = "compareClusterResult") 
+```
+
+
+Multiple omics forms for GSEA algorithm.
+```{r message=FALSE, warning=FALSE}
+# output: multiGseaResult
+GSEA_result <- multiEnrichment(multiGene = multiGene, method = "GSEA", 
+                               TERM2GENE = TERM2GENE)  
+# output: compareClusterResult
+GSEA_result2 <- multiEnrichment(multiGene = multiGene, method = "GSEA", 
+                                TERM2GENE = TERM2GENE, 
+                                output = "compareClusterResult")  
+```
+
+mitch algorithm
+```{r message=FALSE, warning=FALSE}
+# output: enrichResult
+mitch_result <- multiEnrichment(multiGene = multiGene, method = "mitch", 
+                                TERM2GENE = TERM2GENE)
+```
+
+ActivePathways algorithm
+```{r message=FALSE, warning=FALSE}
+# output: enrichResult
+ActivePathways_result <- multiEnrichment(multiGene = multiGene, 
+                                         method = "ActivePathways", 
+                                         TERM2GENE = TERM2GENE)
+```
+
+multiNetEnrich algorithm
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+# output: enrichResult
+multiNetEnrich_result <- multiEnrichment(multiGene = multiGene, 
+                                         method = "multiNetEnrich", 
+                                         TERM2GENE = TERM2GENE, 
+                                         network = network) 
+# output: compareClusterResult
+multiNetEnrich_result2 <- multiEnrichment(multiGene = multiGene, 
+                                          method = "multiNetEnrich", 
+                                          TERM2GENE = TERM2GENE, 
+                                          network = network, 
+                                          output = "compareClusterResult") 
+
+```
+
+```{r}
+sessionInfo()
+```

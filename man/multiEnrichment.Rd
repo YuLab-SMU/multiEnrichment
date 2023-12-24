@@ -7,6 +7,7 @@
 multiEnrichment(
   multiGene,
   method = "enricher",
+  network = NULL,
   cutoff = 0.05,
   pvalueCutoff = 0.05,
   pAdjustMethod = "BH",
@@ -15,7 +16,7 @@ multiEnrichment(
   maxGSSize = 500,
   qvalueCutoff = 0.2,
   TERM2GENE,
-  TERM2NAME = NA,
+  TERM2NAME = NULL,
   combineMethod = "fisher",
   stoufferWeights = NULL,
   ...
@@ -26,7 +27,7 @@ multiEnrichment(
 Each row is a gene, and each column represents an omics dataset.}
 
 \item{method}{enrichment analysis method, one of "enricher"(the default)
-"GSEA", "mitch", "ActivePathways".}
+"GSEA", "mitch", "ActivePathways", and "multiNetEnrich".}
 
 \item{cutoff}{Pvalue threshold of differentially expressed genes.}
 

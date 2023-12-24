@@ -9,7 +9,7 @@
 #' @param multiGene a data.frame of multi-omics gene difference analysis results (pvalue).
 #' Each row is a gene, and each column represents an omics dataset. 
 #' @param method enrichment analysis method, one of "enricher"(the default)
-#' "GSEA", "mitch", "ActivePathways".
+#' "GSEA", "mitch", "ActivePathways", and "multiNetEnrich".
 #' @param cutoff Pvalue threshold of differentially expressed genes.
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel", 
@@ -25,10 +25,12 @@
 #' @param combineMethod The method of combining pvalues, one of 
 #' "fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).
 #' @param stoufferWeights weights of stouffer combine method.
+#' @network network
 #' @param ... Other parameters.
 #' @export
 multiEnrichment <- function(multiGene,
                             method = "enricher",
+                            network = NULL,
                             cutoff = 0.05,
                             pvalueCutoff = 0.05,
                             pAdjustMethod = "BH",
@@ -37,13 +39,13 @@ multiEnrichment <- function(multiGene,
                             maxGSSize=500,
                             qvalueCutoff = 0.2,
                             TERM2GENE,
-                            TERM2NAME = NA,
+                            TERM2NAME = NULL,
                             combineMethod = "fisher",
                             stoufferWeights = NULL,
                             ...) {
 
     method <- match.arg(method,
-        c("enricher", "GSEA", "mitch", "ActivePathways"))
+        c("enricher", "GSEA", "mitch", "ActivePathways", "multiNetEnrich"))
     if (method == "mitch") {
         em <- mitch_method(multiGene, TERM2GENE, minGSSize = minGSSize, ...)
     }
@@ -91,6 +93,15 @@ multiEnrichment <- function(multiGene,
                          combineMethod = combineMethod,
                          stoufferWeights = stoufferWeights,
                          ...)
+    }
+    
+    if (method == "multiNetEnrich") {
+        em <- multiNetEnrich(multiGene, network = network, TERM2GENE = TERM2GENE,
+                             TERM2NAME = TERM2NAME, 
+                             pvalueCutoff = pvalueCutoff, cutoff = cutoff,
+                             pAdjustMethod = pAdjustMethod, qvalueCutoff = qvalueCutoff,
+                             combineMethod = combineMethod,
+                             stoufferWeights = stoufferWeights, ...)
     }
     return(em)
 }
