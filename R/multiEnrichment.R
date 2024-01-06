@@ -8,12 +8,14 @@
 #' @importFrom methods new
 #' @param multiGene a data.frame of multi-omics gene difference analysis results (pvalue).
 #' Each row is a gene, and each column represents an omics dataset. 
+#' @param network network
 #' @param method enrichment analysis method, one of "enricher"(the default)
 #' "GSEA", "mitch", "ActivePathways", and "multiNetEnrich".
 #' @param cutoff Pvalue threshold of differentially expressed genes.
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel", 
 #' "bonferroni", "BH", "BY", "fdr", "none"
+#' @param combineLevel one of "gene" and "enrichResult"
 #' @param universe background genes
 #' @param minGSSize minimal size of genes annotated by Ontology term for testing.
 #' @param maxGSSize maximal size of each geneSet for analyzing
@@ -25,7 +27,6 @@
 #' @param combineMethod The method of combining pvalues, one of 
 #' "fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).
 #' @param stoufferWeights weights of stouffer combine method.
-#' @network network
 #' @param ... Other parameters.
 #' @export
 multiEnrichment <- function(multiGene,
@@ -42,6 +43,7 @@ multiEnrichment <- function(multiGene,
                             TERM2NAME = NULL,
                             combineMethod = "fisher",
                             stoufferWeights = NULL,
+                            combineLevel = "enrichResult",
                             ...) {
 
     method <- match.arg(method,
@@ -77,6 +79,7 @@ multiEnrichment <- function(multiGene,
                              TERM2NAME = TERM2NAME,
                              combineMethod = combineMethod,
                              stoufferWeights = stoufferWeights,
+                             combineLevel = combineLevel,
                              ...)
     }
 
@@ -92,6 +95,7 @@ multiEnrichment <- function(multiGene,
                          TERM2NAME = TERM2NAME,
                          combineMethod = combineMethod,
                          stoufferWeights = stoufferWeights,
+                         combineLevel = combineLevel,
                          ...)
     }
     
@@ -101,7 +105,9 @@ multiEnrichment <- function(multiGene,
                              pvalueCutoff = pvalueCutoff, cutoff = cutoff,
                              pAdjustMethod = pAdjustMethod, qvalueCutoff = qvalueCutoff,
                              combineMethod = combineMethod,
-                             stoufferWeights = stoufferWeights, ...)
+                             stoufferWeights = stoufferWeights, 
+                             combineLevel = combineLevel,
+                             ...)
     }
     return(em)
 }

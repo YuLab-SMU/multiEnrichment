@@ -1,7 +1,7 @@
 Package: multiEnrichment
 Type: Package
 Title: Multi-omics enrichment analysis
-Version: 0.1.0.993
+Version: 0.1.0.994
 Authors@R: person(given = "Erqiang", family = "Hu", email = "13766876214@163.com", role  = c("aut", "cre"))
 Description: An R package that integrates several multi-group enrichment analysis software, 
     and the enrichment results can be seamlessly docked with enrichplot for easy mapping.

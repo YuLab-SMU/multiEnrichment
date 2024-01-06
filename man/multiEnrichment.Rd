@@ -19,6 +19,7 @@ multiEnrichment(
   TERM2NAME = NULL,
   combineMethod = "fisher",
   stoufferWeights = NULL,
+  combineLevel = "enrichResult",
   ...
 )
 }
@@ -28,6 +29,8 @@ Each row is a gene, and each column represents an omics dataset.}
 
 \item{method}{enrichment analysis method, one of "enricher"(the default)
 "GSEA", "mitch", "ActivePathways", and "multiNetEnrich".}
+
+\item{network}{network}
 
 \item{cutoff}{Pvalue threshold of differentially expressed genes.}
 
@@ -54,6 +57,8 @@ a data.frame of 2 column with term and name}
 "fisher", "edgington", "stouffer" and "Brown"(only used in ActivePathways method).}
 
 \item{stoufferWeights}{weights of stouffer combine method.}
+
+\item{combineLevel}{one of "gene" and "enrichResult"}
 
 \item{...}{Other parameters.}
 }

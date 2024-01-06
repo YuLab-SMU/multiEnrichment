@@ -34,10 +34,20 @@ Multiple omics forms for ORA algorithm.
 # output: enrichResult
 enricher_result <- multiEnrichment(multiGene = multiGene, method = "enricher", 
                                    TERM2GENE = TERM2GENE) 
+class(enricher_result)
+head(enricher_result)
 # output: compareClusterResult
-enricher2_result <- multiEnrichment(multiGene = multiGene, method = "enricher", 
+enricher_result2 <- multiEnrichment(multiGene = multiGene, method = "enricher", 
                                     TERM2GENE = TERM2GENE, 
                                     output = "compareClusterResult") 
+class(enricher_result2)
+head(enricher_result2)
+
+# combinelevel = "gene"
+enricher_result3 <- multiEnrichment(multiGene = multiGene, method = "enricher", 
+                                   TERM2GENE = TERM2GENE, combineLevel = "gene") 
+class(enricher_result3)
+head(enricher_result3)
 ```
 
 
@@ -46,10 +56,19 @@ Multiple omics forms for GSEA algorithm.
 # output: multiGseaResult
 GSEA_result <- multiEnrichment(multiGene = multiGene, method = "GSEA", 
                                TERM2GENE = TERM2GENE)  
+class(GSEA_result)
+head(GSEA_result)
 # output: compareClusterResult
 GSEA_result2 <- multiEnrichment(multiGene = multiGene, method = "GSEA", 
                                 TERM2GENE = TERM2GENE, 
-                                output = "compareClusterResult")  
+                                output = "compareClusterResult")
+class(GSEA_result2)
+head(GSEA_result2)
+# combinelevel = "gene"
+GSEA_result3 <- multiEnrichment(multiGene = multiGene, method = "GSEA", 
+                               TERM2GENE = TERM2GENE, combineLevel = "gene")  
+class(GSEA_result3)
+head(GSEA_result3)
 ```
 
 mitch algorithm
@@ -57,6 +76,8 @@ mitch algorithm
 # output: enrichResult
 mitch_result <- multiEnrichment(multiGene = multiGene, method = "mitch", 
                                 TERM2GENE = TERM2GENE)
+class(mitch_result)
+head(mitch_result)
 ```
 
 ActivePathways algorithm
@@ -65,23 +86,55 @@ ActivePathways algorithm
 ActivePathways_result <- multiEnrichment(multiGene = multiGene, 
                                          method = "ActivePathways", 
                                          TERM2GENE = TERM2GENE)
+class(ActivePathways_result)
+head(ActivePathways_result)
 ```
 
 multiNetEnrich algorithm
-```{r eval=FALSE, message=FALSE, warning=FALSE}
+```{r eval=TRUE, message=FALSE, warning=FALSE}
 # output: enrichResult
 multiNetEnrich_result <- multiEnrichment(multiGene = multiGene, 
                                          method = "multiNetEnrich", 
                                          TERM2GENE = TERM2GENE, 
                                          network = network) 
+class(multiNetEnrich_result)
+head(multiNetEnrich_result)
 # output: compareClusterResult
 multiNetEnrich_result2 <- multiEnrichment(multiGene = multiGene, 
                                           method = "multiNetEnrich", 
                                           TERM2GENE = TERM2GENE, 
                                           network = network, 
                                           output = "compareClusterResult") 
+class(multiNetEnrich_result2)
+head(multiNetEnrich_result2)
 
+# use a list of network
+networkList <- list(RNA = network, methy = network)
+# output: enrichResult
+multiNetEnrich_result3 <- multiEnrichment(multiGene = multiGene, 
+                                         method = "multiNetEnrich", 
+                                         TERM2GENE = TERM2GENE, 
+                                         network = networkList) 
+class(multiNetEnrich_result3)
+head(multiNetEnrich_result3)
+# output: compareClusterResult
+multiNetEnrich_result4 <- multiEnrichment(multiGene = multiGene, 
+                                          method = "multiNetEnrich", 
+                                          TERM2GENE = TERM2GENE, 
+                                          network = networkList, 
+                                          output = "compareClusterResult") 
+class(multiNetEnrich_result4)
+head(multiNetEnrich_result4)
+# combinelevel = "gene"
+multiNetEnrich_result5 <- multiEnrichment(multiGene = multiGene, 
+                                         method = "multiNetEnrich", 
+                                         TERM2GENE = TERM2GENE, 
+                                         network = network,
+                                         combineLevel = "gene") 
+class(multiNetEnrich_result5)
+head(multiNetEnrich_result5)
 ```
+
 
 ```{r}
 sessionInfo()

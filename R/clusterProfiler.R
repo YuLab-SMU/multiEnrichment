@@ -6,6 +6,7 @@
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel",
 #' "bonferroni", "BH", "BY", "fdr", "none"
+#' @param combineLevel one of "gene" and "enrichResult"
 #' @param universe background genes
 #' @param minGSSize minimal size of genes annotated by Ontology term for testing.
 #' @param maxGSSize maximal size of each geneSet for analyzing
@@ -31,12 +32,26 @@ multi_enricher <- function(multiGene,
                            combineMethod = "fisher",
                            stoufferWeights = NULL,
                            output = "enrichResult",
+                           combineLevel = "enrichResult",
                            ...) {
 
     # if (class(multiGene) == "data.frame") {
     #     multiGene <- split(multiGene, multiGene$omic)
     # }    
     output <- match.arg(output, c("enrichResult", "multiEnrichResult", "compareClusterResult"))
+    combineLevel <- match.arg(combineLevel, c("gene", "enrichResult"))
+    run_enricher <- function(df, ...) {
+        genes <- df[df$pvalue < cutoff, "gene"]
+        clusterProfiler::enricher(genes, TERM2GENE = TERM2GENE,
+            pvalueCutoff = 1, qvalueCutoff = 1, ...)
+    }
+    if (combineLevel == "gene") {
+        gene_df <- combine_pvalue(multiGene, object = "gene")
+        gene <- gene_df[gene_df[, 2] < cutoff, 1]
+        result <- clusterProfiler::enricher(gene, TERM2GENE = TERM2GENE,
+            pvalueCutoff = 1, qvalueCutoff = 1, ...)
+        return(result)
+    }
     multiGeneList <- vector("list", length = ncol(multiGene))         
     names(multiGeneList) <- colnames(multiGene)  
     for (i in colnames(multiGene)) {
@@ -51,11 +66,7 @@ multi_enricher <- function(multiGene,
                       pAdjustMethod = pAdjustMethod, qvalueCutoff = qvalueCutoff)
         return(em)
     }
-    run_enricher <- function(df, ...) {
-        genes <- df[df$pvalue < cutoff, "gene"]
-        clusterProfiler::enricher(genes, TERM2GENE = TERM2GENE,
-            pvalueCutoff = 1, qvalueCutoff = 1, ...)
-    }
+
     multiEm <- lapply(multiGeneList, run_enricher, ...)
     em <- combine_enricher(multiEm = multiEm, method = combineMethod, 
         stoufferWeights = stoufferWeights, pAdjustMethod = pAdjustMethod,
@@ -78,6 +89,7 @@ multi_enricher <- function(multiGene,
 #' @param pvalueCutoff Cutoff value of pvalue.
 #' @param pAdjustMethod one of "holm", "hochberg", "hommel",
 #' "bonferroni", "BH", "BY", "fdr", "none"
+#' @param combineLevel one of "gene" and "enrichResult"
 #' @param universe background genes
 #' @param minGSSize minimal size of genes annotated by Ontology term for testing.
 #' @param maxGSSize maximal size of each geneSet for analyzing
@@ -101,11 +113,22 @@ multi_GSEA <- function(multiGene,
                        combineMethod = "fisher",
                        stoufferWeights = NULL,
                        output = "multiGseaResult",
+                       combineLevel = "enrichResult",
                        ...) {
     # if (class(multiGene) == "data.frame") {
     #     multiGene <- split(multiGene, multiGene$omic)
     # }  
     output <- match.arg(output, c("multiGseaResult", "gseaResult", "compareClusterResult"))
+    combineLevel <- match.arg(combineLevel, c("gene", "enrichResult"))
+    if (combineLevel == "gene") {
+        gene_df <- combine_pvalue(multiGene, object = "gene")
+        genelist <- gene_df[,2]
+        names(genelist) <- gene_df[, 1]
+        genelist <- sort(genelist, decreasing = TRUE)
+        result <- clusterProfiler::GSEA(genelist, TERM2GENE = TERM2GENE,
+             pvalueCutoff = 1)
+        return(result)
+    }
     multiGeneList <- vector("list", length = ncol(multiGene))         
     names(multiGeneList) <- colnames(multiGene)  
     for (i in colnames(multiGene)) {
@@ -237,19 +260,27 @@ combine_enricher <- function(multiEm, method, stoufferWeights,
 #' @noRd
 combine_pvalue <- function(multiEm, method = "fisher", 
                            stoufferWeights = NULL, 
-                           pAdjustMethod = "BH") {
-    extraPvalue <- function(em) {
+                           pAdjustMethod = "BH", object = "enrichResult") {
+    extraPvalue <- function(em, object = object) {
         em <- as.data.frame(em)
-        data.frame(ID = em$ID, pvalue = em$pvalue)
+        return(data.frame(ID = em$ID, pvalue = em$pvalue))
     }
-    result <- lapply(multiEm, extraPvalue)
-    result2 <- lapply(result, function(x) x$ID)
-    categorys <- unique(unlist(result2))
-    values <- as.data.frame(matrix(NA, length(categorys), length(result)))
-    rownames(values) <- categorys
-    for (i in seq_len(length(result))) {
-      values[result[[i]]$ID, i] <-  result[[i]]$pvalue
+
+    if (object == "enrichResult") {
+        result <- lapply(multiEm, extraPvalue)
+        result2 <- lapply(result, function(x) x$ID)
+        categorys <- unique(unlist(result2))
+        values <- as.data.frame(matrix(NA, length(categorys), length(result)))
+        rownames(values) <- categorys
+        for (i in seq_len(length(result))) {
+          values[result[[i]]$ID, i] <-  result[[i]]$pvalue
+        }
+    } else {
+        categorys <- rownames(multiEm)
+        values <- multiEm
     }
+   
+
     pvalue <- rep(0, nrow(values))
     for (i in seq_len(nrow(values))) {
         pp <- as.numeric(values[i, ])

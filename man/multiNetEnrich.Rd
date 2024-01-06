@@ -19,7 +19,8 @@ multiNetEnrich(
   qvalueCutoff = 0.2,
   combineMethod = "fisher",
   stoufferWeights = NULL,
-  output = "enrichResult"
+  output = "enrichResult",
+  combineLevel = "enrichResult"
 )
 }
 \arguments{
@@ -57,6 +58,8 @@ a data.frame of 2 column with term and name}
 \item{stoufferWeights}{weights of stouffer combine method.}
 
 \item{output}{output class, one of "enrichResult", "compareClusterResult" and "list".}
+
+\item{combineLevel}{one of "gene" and "enrichResult"}
 }
 \description{
 multiNetEnrich
